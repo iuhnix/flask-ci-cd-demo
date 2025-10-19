@@ -13,15 +13,35 @@ jobs:
   # Job 1: 持续集成 (CI) 阶段
   build-and-test:
     name: CI - Build and Test
+    # 告诉 GitHub Actions 在一个最新的 Ubuntu 虚拟机上运行这个任务
     runs-on: ubuntu-latest
     steps:
-      # 步骤将在下一步详细讲解
-      - name: 检出代码 (Checkout code)
+      # 1. 检出代码 (Checkout code)
+      - name: 检出代码
+        # 使用官方 Action，将仓库中的代码下载到运行器（Runner）中
         uses: actions/checkout@v4
 
-      - name: 运行简单的构建和测试 (Run Build/Test)
-        # TODO: 这里是您的构建和测试命令
+      # 2. 设置 Python 环境 (Setup Python)
+      - name: 设置 Python 3.9 环境
+        # 使用官方 Action，在运行器上安装并配置指定版本的 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
 
+      # 3. 运行简单的测试 (Run Test)
+      - name: 运行简单的代码检查 (模拟测试)
+        # run 关键字允许您直接运行 shell 命令
+        run: |
+          # 模拟测试通过：Python 应用代码质量检查通过。
+          echo "Test passed: Python application code quality check passed."
+          
+      # 4. 模拟构建 Docker 镜像 (作为 CI 阶段的最后检查)
+      # 这一步需要 Runner 上有 Docker 环境，GitHub Runner 默认已安装
+      - name: 模拟 Docker 镜像构建 (但不保存)
+        # --no-cache: 确保从头开始构建
+        # . : 指示 Dockerfile 在当前目录
+        run: docker build --no-cache .
+        
   # Job 2: 持续部署 (CD) 阶段
   deploy:
     name: CD - Deploy to Docker
@@ -29,8 +49,6 @@ jobs:
     needs: [build-and-test] 
     runs-on: ubuntu-latest
     steps:
-      # 步骤将在下一步详细讲解
-      - name: 登录 Docker Hub/Registry
-
-      - name: 构建并推送 Docker 镜像
-        # TODO: 这里是您的镜像构建和推送命令
+      # TODO: 这里是 CD 阶段的步骤，我们将在下一步添加
+      - name: 部署暂未配置
+        run: echo "等待添加 CD 部署步骤..."
