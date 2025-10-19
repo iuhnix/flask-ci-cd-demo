@@ -13,7 +13,6 @@ jobs:
   # Job 1: 持续集成 (CI) 阶段
   build-and-test:
     name: CI - Build and Test
-    # 告诉 GitHub Actions 在一个最新的 Ubuntu 虚拟机上运行这个任务
     runs-on: ubuntu-latest
     steps:
       # 1. 检出代码 (Checkout code)
@@ -37,9 +36,8 @@ jobs:
         run: docker build --no-cache .
         
   # Job 2: 持续部署 (CD) 阶段
-  deploy: # <-- 这是 deploy 任务的头部定义，与 build-and-test 平齐
+  deploy:
     name: CD - Deploy to Docker
-    # 确保只有 CI 任务成功后，CD 任务才开始
     needs: [build-and-test] 
     runs-on: ubuntu-latest
     steps:
@@ -60,14 +58,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      # 4. 构建并推送到 Docker Hub
+      # 4. 构建并推送到 Docker Hub (应用 tolower 最终修正)
       - name: 构建并推送到 Docker Hub
         uses: docker/build-push-action@v5
         with:
           context: .
-          # 推送（push: true）到 Docker Hub
           push: true
-          # 镜像名称和Tag：
+          # 强制转换为小写，解决 Docker Hub 的大小写限制
           tags: |
-            ${{ secrets.DOCKER_USERNAME }}/flask-ci-cd-demo:latest
-            ${{ secrets.DOCKER_USERNAME }}/flask-ci-cd-demo:${{ github.run_id }}
+            ${{ tolower(secrets.DOCKER_USERNAME) }}/flask-ci-cd-demo:latest
+            ${{ tolower(secrets.DOCKER_USERNAME) }}/flask-ci-cd-demo:${{ github.run_id }}
