@@ -1,16 +1,17 @@
-# 文件路径：.github/workflows/ci-cd.yml
 name: Flask App CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+
 # -------------------------------------------------------------
 jobs:
   # Job 1: 持续集成 (CI) 阶段 - 专注于代码和环境检查
   build-and-test:
     name: CI - Build and Test
     runs-on: ubuntu-latest
+
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
@@ -21,43 +22,39 @@ jobs:
           python-version: '3.9'
 
       - name: 运行简单的代码检查 (模拟测试)
-        # 3. 运行简单的测试 (Run Test)
-      - name: 运行简单的代码检查 (模拟测试)
-        run: |  # <-- 确保这里是 run: |
-          echo "Test passed: Python application code quality check passed."
-          
-      # 避免不必要的构建， CI 阶段只做代码和测试，构建交给 CD 阶段
-      # - name: 模拟 Docker 镜像构建 (已移除，交由 CD 严格执行)
-        
-  # Job 2: 持续部署 (CD) 阶段 - 专注于构建和推送
+        run: |
+          echo "✅ Test passed: Python application code quality check passed."
+
+  # Job 2: 持续部署 (CD) 阶段 - 专注于构建和推送 Docker 镜像
   deploy:
-    name: CD - Deploy to Docker
-    needs: [build-and-test] 
+    name: CD - Deploy to Docker Hub
+    needs: [build-and-test]
     runs-on: ubuntu-latest
+
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
 
       - name: 设置 QEMU 和 Buildx (最佳实践)
         uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
 
-      # 登录 Docker Hub (使用 secrets.DOCKER_USERNAME 和 secrets.DOCKER_TOKEN)
+      - name: 设置 Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 登录 Docker Hub (使用 secrets)
       - name: 登录 Docker Hub
         uses: docker/login-action@v3
         with:
-          # 使用您在 GitHub Secrets 中配置的机密名称
           username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }} 
+          password: ${{ secrets.DOCKER_TOKEN }}
 
-      # 构建并推送到 Docker Hub
+      # 构建并推送镜像到 Docker Hub
       - name: 构建并推送到 Docker Hub
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          # 最终修正：硬编码 Docker Hub 用户名 iuhmix (小写)
-          # 解决 tolower() 函数解析错误，确保镜像推送到正确账户
           tags: |
             iuhmix/flask-ci-cd-demo:latest
             iuhmix/flask-ci-cd-demo:${{ github.run_id }}
+
