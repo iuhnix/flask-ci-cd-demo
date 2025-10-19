@@ -21,7 +21,10 @@ jobs:
           python-version: '3.9'
 
       - name: 运行简单的代码检查 (模拟测试)
-        run: echo "Test passed: Python application code quality check passed."
+        # 3. 运行简单的测试 (Run Test)
+      - name: 运行简单的代码检查 (模拟测试)
+        run: |  # <-- 确保这里是 run: |
+          echo "Test passed: Python application code quality check passed."
           
       # 避免不必要的构建， CI 阶段只做代码和测试，构建交给 CD 阶段
       # - name: 模拟 Docker 镜像构建 (已移除，交由 CD 严格执行)
