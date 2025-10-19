@@ -18,37 +18,56 @@ jobs:
     steps:
       # 1. 检出代码 (Checkout code)
       - name: 检出代码
-        # 使用官方 Action，将仓库中的代码下载到运行器（Runner）中
         uses: actions/checkout@v4
 
       # 2. 设置 Python 环境 (Setup Python)
       - name: 设置 Python 3.9 环境
-        # 使用官方 Action，在运行器上安装并配置指定版本的 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
       # 3. 运行简单的测试 (Run Test)
       - name: 运行简单的代码检查 (模拟测试)
-        # run 关键字允许您直接运行 shell 命令
         run: |
           # 模拟测试通过：Python 应用代码质量检查通过。
           echo "Test passed: Python application code quality check passed."
           
       # 4. 模拟构建 Docker 镜像 (作为 CI 阶段的最后检查)
-      # 这一步需要 Runner 上有 Docker 环境，GitHub Runner 默认已安装
       - name: 模拟 Docker 镜像构建 (但不保存)
-        # --no-cache: 确保从头开始构建
-        # . : 指示 Dockerfile 在当前目录
         run: docker build --no-cache .
         
   # Job 2: 持续部署 (CD) 阶段
-  deploy:
+  deploy: # <-- 这是 deploy 任务的头部定义，与 build-and-test 平齐
     name: CD - Deploy to Docker
-    # 这个部署任务必须在 CI 任务成功后才能运行
+    # 确保只有 CI 任务成功后，CD 任务才开始
     needs: [build-and-test] 
     runs-on: ubuntu-latest
     steps:
-      # TODO: 这里是 CD 阶段的步骤，我们将在下一步添加
-      - name: 部署暂未配置
-        run: echo "等待添加 CD 部署步骤..."
+      # 1. 检出代码
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 2. 设置 Docker 环境 (包括构建工具)
+      - name: 设置 QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 3. 登录 Docker Hub (使用我们设置的 Secrets)
+      - name: 登录 Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      # 4. 构建并推送到 Docker Hub
+      - name: 构建并推送到 Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          # 推送（push: true）到 Docker Hub
+          push: true
+          # 镜像名称和Tag：
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/flask-ci-cd-demo:latest
+            ${{ secrets.DOCKER_USERNAME }}/flask-ci-cd-demo:${{ github.run_id }}
